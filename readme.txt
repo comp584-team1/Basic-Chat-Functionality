@@ -1,0 +1,1 @@
+Basic barebones chat functionality, using node, socket.io and express. Also did some minor css tweaking.
