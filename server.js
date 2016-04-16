@@ -2,6 +2,7 @@ var express = require('express');
 var app = express();
 var server = require('http').createServer(app);
 var io = require('socket.io').listen(server);
+var mysql = require('mysql');
 	
 	users = [];
 	connections = [];
@@ -15,10 +16,39 @@ app.get('/', function(req, res){
 	
 });
 
+var connection = mysql.createConnection({
+    host:'127.0.0.1',
+    user:'root',
+    password:'secretpass',
+    database:'chatdb'
+});
+
 io.sockets.on('connection', function(socket){
+    connection.query({sql:"SELECT * FROM messages WHERE `room_id`=1 ORDER BY `time_utc` LIMIT 10;"}, function(err, rows, fields){
+        if(err){
+            console.log("Couldn't get existing messages from database.");
+            console.log(err);
+            socket.emit(err);
+            return;
+        }
+        var output = "- system message - Welcome to Chat584!  Let's start you off with the most recent ten messages (or up to ten if fewer exist in our database).<br>- -";
+        for(item of rows) {
+            output += "<br>user " + item["user_id"] + ": " + item["msg_body"];
+        }
+        socket.emit('new message', output);
+    });
+    
 	socket.on('send-message', function(data){
-		io.sockets.emit('new message', data);
-	});
+        connection.query({sql:"INSERT INTO messages SET `room_id`=1, `time_utc`=UNIX_TIMESTAMP(), `user_id`=1, `msg_body`=\"" + data + "\";"}, function(err, rows, fields){
+            if(err){
+                console.log("Couldn't insert incoming message to DB; will not emit.");
+                console.log(err);
+                return;
+            }
+            console.log("Insert completed on incoming message.")
+		    io.sockets.emit('new message', data);
+        });
+    });
 	
 	
 });
