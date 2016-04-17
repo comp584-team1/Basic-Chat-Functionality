@@ -28,41 +28,48 @@
     <head>
         <script src ="https://code.jquery.com/jquery-latest.min.js"></script>
         <script src ="/socket.io/socket.io.js"></script>
-	
-        <script>
-
-            //jQuery(function($){
-
-                var socket = io.connect();
-
-                var $messageForm = $('#send-message');
-                var $messageBox = $('#message');
-                var $chat = $('#chat');
-
-                $messageForm.submit(function(e){
-
-                    e.preventDefault();
-                    socket.emit('send-message', $messageBox.val());
-                    $messageBox.val('');
-
-                });
-
-                socket.on('new message', function(data){
-                    var chat = $("#chat");
-                    chat.append(data + "<br/>");
-                    var h = chat[0].scrollHeight;
-                    chat.scrollTop(h);
-                });
-            //});
-
-        </script>
         
         <script type="text/javascript">
             var currentRoom = "";
+            var socket;
+            
+            var chatSubmit;
+            var messageBox;
+            var chat;
             
             function init() {
                 console.log("Initializing DOM-dependent JS.");
                 $("#set-room").click(setRoom);
+
+                //jQuery(function($){
+
+                    socket = io.connect();
+
+                    chatSubmit = $('#chat-submit');
+                    messageBox = $('#message');
+                    chat = $('#chat');
+
+                    chatSubmit.click(function(e){
+
+                        e.preventDefault();
+                        console.log("User attempting to send a message.");
+                        socket.emit('send-message', messageBox.val());
+                        messageBox.val('');
+
+                    });
+
+                    socket.on('new message', function(data){
+                        var chatOut = $("#chat");
+                        chatOut.append(data + "<br/>");
+                        var h = chatOut[0].scrollHeight;
+                        chatOut.scrollTop(h);
+                    });
+                    
+                    socket.on('clear-chat', function(){
+                        console.log("Server tried to clear local chat window.");
+                        chat.html("");
+                    });
+                //});
             }
             
             function setRoom() {
@@ -77,11 +84,9 @@
 <body>
     <h1 id="header">Welcome to Chat584!</h1>
     <div id="chat-elements">
-        <div id = "chat">Welcome to Chat584!  Select a room to join.<br></div><br>
-        <form id = "send-message">
-            <input size = "35" id = "message"><br>
-            <input type = "submit">
-        </form>
+        <div id="chat">Welcome to Chat584!  Select a room to join.<br></div><br>
+        <input size="35" id="message"><br>
+        <button id="chat-submit">Send</button>
     </div>
 
     <div id="details">

@@ -33,11 +33,12 @@ io.sockets.on('connection', function(socket){
                 socket.emit(err);
                 return;
             }
+            socket.emit('clear-chat');
             var output = ""
             for(item of rows) {
                 output = "user " + item["user_id"] + ": " + item["msg_body"] + "<br>" + output;
             }
-            output = "- system message - Welcome to Chat584!  Let's start you off with the most recent ten messages (or up to ten if fewer exist in our database).<br>- -<br>" + output;
+            output = "- system message - Welcome to " + data + "!  Let's start you off with the most recent ten messages (or up to ten if fewer exist in our database).<br>- -<br>" + output;
             if(rows.length == 0) {
                 output += "- system message - No messages in this room, yet.  Be the first!<br>- -";
             }
@@ -47,6 +48,7 @@ io.sockets.on('connection', function(socket){
     });
     
 	socket.on('send-message', function(data){
+        console.log("A user tried to send a message.");
         connection.query({sql:"INSERT INTO messages SET `room_id`=1, `time_utc`=UNIX_TIMESTAMP(), `user_id`=1, `msg_body`=\"" + data + "\";"}, function(err, rows, fields){
             if(err){
                 console.log("Couldn't insert incoming message to DB; will not emit.");
