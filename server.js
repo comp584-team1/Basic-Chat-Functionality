@@ -24,17 +24,22 @@ var connection = mysql.createConnection({
 });
 
 io.sockets.on('connection', function(socket){
-    connection.query({sql:"SELECT * FROM messages WHERE `room_id`=1 ORDER BY `time_utc` LIMIT 10;"}, function(err, rows, fields){
+    connection.query({sql:"SELECT * FROM messages WHERE `room_id`=1 ORDER BY `time_utc` DESC LIMIT 10;"}, function(err, rows, fields){
         if(err){
             console.log("Couldn't get existing messages from database.");
             console.log(err);
             socket.emit(err);
             return;
         }
-        var output = "- system message - Welcome to Chat584!  Let's start you off with the most recent ten messages (or up to ten if fewer exist in our database).<br>- -";
+        var output = ""
         for(item of rows) {
-            output += "<br>user " + item["user_id"] + ": " + item["msg_body"];
+            output = "user " + item["user_id"] + ": " + item["msg_body"] + "<br>" + output;
         }
+        output = "- system message - Welcome to Chat584!  Let's start you off with the most recent ten messages (or up to ten if fewer exist in our database).<br>- -<br>" + output;
+        if(rows.length == 0) {
+            output += "- system message - No messages in this room, yet.  Be the first!<br>- -";
+        }
+
         socket.emit('new message', output);
     });
     

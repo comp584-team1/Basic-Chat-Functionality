@@ -1,53 +1,79 @@
 <html>
-<title>Chat Test</title>
+    <title>Chat Test</title>
 
-<style> #chat{
-height: 500px;
-width: 335px;
-border: groove;
-}
-#send-message{
-padding: 10px 10px 0px .4em;
-}
+    <style>
+        #header{
+            text-align: center;
+        }
+        
+        #chat-elements{
+            float: left;
+        }
+        #details{
+            float: right;
+        }
 
-</style>
-<head>
+        #chat{
+            height: 300px;
+            width: 400px;
+            border: groove;
+            overflow-y: scroll;
+        }
+
+        #send-message{
+            padding: 10px 10px 0px .4em;
+        }
+
+    </style>
+    <head>
+        <script src ="https://code.jquery.com/jquery-latest.min.js"></script>
+        <script src ="/socket.io/socket.io.js"></script>
+	
+        <script>
+
+            jQuery(function($){
+
+                var socket = io.connect();
+
+                var $messageForm = $('#send-message');
+                var $messageBox = $('#message');
+                var $chat = $('#chat');
+
+                $messageForm.submit(function(e){
+
+                    e.preventDefault();
+                    socket.emit('send-message', $messageBox.val());
+                    $messageBox.val('');
+
+                });
+
+                socket.on('new message', function(data){
+                    var chat = $("#chat");
+                    chat.append(data + "<br/>");
+                    var h = chat[0].scrollHeight;
+                    chat.scrollTop(h);
+                });
+            });
+
+        </script>
+        
+        <script type="text/javascript">
+        </script>
+    </head>
 <body>
+    <h1 id="header">Welcome to Chat584!</h1>
+    <div id="chat-elements">
+        <div id = "chat"></div><br>
+        <form id = "send-message">
+            <input size = "35" id = "message"><br>
+            <input type = "submit">
+        </form>
+    </div>
 
-<div id = "chat"></div>
+    <div id="details">
+        Username: <input id="user" size="16"><br>
+        Room: <input id="room" size="16"><br>
+        <button id="set-room">Set room</button>
+    </div>
 
-<form id = "send-message">
-	<input size = "35" id = "message"></input>
-	<input type = "submit"></input>
-	</form>
-
-	<script src ="https://code.jquery.com/jquery-latest.min.js"></script>
-	<script src ="/socket.io/socket.io.js"></script>
-	
-	<script>
-	
-	jQuery(function($){
-	
-		var socket = io.connect();
-		
-		var $messageForm = $('#send-message');
-		var $messageBox = $('#message');
-		var $chat = $('#chat');
-		
-		$messageForm.submit(function(e){
-		
-            e.preventDefault();
-            socket.emit('send-message', $messageBox.val());
-            $messageBox.val('');
-		
-		});
-		
-		socket.on('new message', function(data){
-            $chat.append(data + "<br/>");
-		});
-	});
-	
-	</script>
-</body>
-</head>
-</html>
+</body></html>
