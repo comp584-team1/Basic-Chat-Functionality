@@ -34,6 +34,7 @@ io.sockets.on('connection', function(socket){
                 return;
             }
             socket.emit('clear-chat');
+            socket.emit('update-roomname', data);
             var output = ""
             for(item of rows) {
                 output = "user " + item["user_id"] + ": " + item["msg_body"] + "<br>" + output;

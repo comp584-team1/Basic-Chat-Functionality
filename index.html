@@ -33,43 +33,59 @@
             var currentRoom = "";
             var socket;
             
-            var chatSubmit;
+            var chatSend;
             var messageBox;
             var chat;
+            var header;
+            var setRoomButton;
             
             function init() {
                 console.log("Initializing DOM-dependent JS.");
-                $("#set-room").click(setRoom);
+                
+                socket = io.connect();
 
-                //jQuery(function($){
+                chatSend = $('#chatSend');
+                messageBox = $('#message');
+                chat = $('#chat');
+                header = $("#header");
+                setRoomButton = $("#setRoom");
+                
+                setRoomButton.click(setRoom);
+                chatSend.click(function(e){
 
-                    socket = io.connect();
+                    e.preventDefault();
+                    console.log("User attempting to send a message.");
+                    socket.emit('send-message', messageBox.val());
+                    messageBox.val('');
 
-                    chatSubmit = $('#chat-submit');
-                    messageBox = $('#message');
-                    chat = $('#chat');
+                });
+                
+                messageBox.keyup(function(event){
+                    if(event.keyCode == 13){
+                        chatSend.click();
+                    }
+                });
+                $("#room").keyup(function(event){
+                    if(event.keyCode == 13){
+                        setRoomButton.click();
+                    }
+                });
 
-                    chatSubmit.click(function(e){
+                socket.on('new message', function(data){
+                    var chatOut = $("#chat");
+                    chatOut.append(data + "<br/>");
+                    var h = chatOut[0].scrollHeight;
+                    chatOut.scrollTop(h);
+                });
 
-                        e.preventDefault();
-                        console.log("User attempting to send a message.");
-                        socket.emit('send-message', messageBox.val());
-                        messageBox.val('');
+                socket.on('clear-chat', function(){
+                    console.log("Server tried to clear local chat window.");
+                    chat.html("");
+                });
 
-                    });
-
-                    socket.on('new message', function(data){
-                        var chatOut = $("#chat");
-                        chatOut.append(data + "<br/>");
-                        var h = chatOut[0].scrollHeight;
-                        chatOut.scrollTop(h);
-                    });
-                    
-                    socket.on('clear-chat', function(){
-                        console.log("Server tried to clear local chat window.");
-                        chat.html("");
-                    });
-                //});
+                socket.on('update-roomname', function(data) {
+                    header.html("Welcome to " + data + "!");
+                });
             }
             
             function setRoom() {
@@ -86,13 +102,13 @@
     <div id="chat-elements">
         <div id="chat">Welcome to Chat584!  Select a room to join.<br></div><br>
         <input size="35" id="message"><br>
-        <button id="chat-submit">Send</button>
+        <button id="chatSend">Send</button>
     </div>
 
     <div id="details">
         Username: <input id="user" size="16"><br>
         Room: <input id="room" size="16"><br>
-        <button id="set-room">Join room</button>
+        <button id="setRoom">Join room</button>
     </div>
 
 </body></html>
