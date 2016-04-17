@@ -1,53 +1,114 @@
 <html>
-<title>Chat Test</title>
+    <title>Chat Test</title>
 
-<style> #chat{
-height: 500px;
-width: 335px;
-border: groove;
-}
-#send-message{
-padding: 10px 10px 0px .4em;
-}
+    <style>
+        #header{
+            text-align: center;
+        }
+        
+        #chat-elements{
+            float: left;
+        }
+        #details{
+            float: right;
+        }
 
-</style>
-<head>
+        #chat{
+            height: 300px;
+            width: 400px;
+            border: groove;
+            overflow-y: scroll;
+        }
+
+        #send-message{
+            padding: 10px 10px 0px .4em;
+        }
+
+    </style>
+    <head>
+        <script src ="https://code.jquery.com/jquery-latest.min.js"></script>
+        <script src ="/socket.io/socket.io.js"></script>
+        
+        <script type="text/javascript">
+            var currentRoom = "";
+            var socket;
+            
+            var chatSend;
+            var messageBox;
+            var chat;
+            var header;
+            var setRoomButton;
+            
+            function init() {
+                console.log("Initializing DOM-dependent JS.");
+                
+                socket = io.connect();
+
+                chatSend = $('#chatSend');
+                messageBox = $('#message');
+                chat = $('#chat');
+                header = $("#header");
+                setRoomButton = $("#setRoom");
+                
+                setRoomButton.click(setRoom);
+                chatSend.click(function(e){
+
+                    e.preventDefault();
+                    console.log("User attempting to send a message.");
+                    socket.emit('send-message', messageBox.val());
+                    messageBox.val('');
+
+                });
+                
+                messageBox.keyup(function(event){
+                    if(event.keyCode == 13){
+                        chatSend.click();
+                    }
+                });
+                $("#room").keyup(function(event){
+                    if(event.keyCode == 13){
+                        setRoomButton.click();
+                    }
+                });
+
+                socket.on('new message', function(data){
+                    var chatOut = $("#chat");
+                    chatOut.append(data + "<br/>");
+                    var h = chatOut[0].scrollHeight;
+                    chatOut.scrollTop(h);
+                });
+
+                socket.on('clear-chat', function(){
+                    console.log("Server tried to clear local chat window.");
+                    chat.html("");
+                });
+
+                socket.on('update-roomname', function(data) {
+                    header.html("Welcome to " + data + "!");
+                });
+            }
+            
+            function setRoom() {
+                var roomName = $("#room").val();
+                console.log("Attempting to change room to '" + roomName + "'")
+                socket.emit("room-change", roomName);
+            }
+            
+            $(document).ready(init);
+        </script>
+    </head>
 <body>
+    <h1 id="header">Welcome to Chat584!</h1>
+    <div id="chat-elements">
+        <div id="chat">Welcome to Chat584!  Select a room to join.<br></div><br>
+        <input size="35" id="message"><br>
+        <button id="chatSend">Send</button>
+    </div>
 
-<div id = "chat"></div>
+    <div id="details">
+        Username: <input id="user" size="16"><br>
+        Room: <input id="room" size="16"><br>
+        <button id="setRoom">Join room</button>
+    </div>
 
-<form id = "send-message">
-	<input size = "35" id = "message"></input>
-	<input type = "submit"></input>
-	</form>
-
-	<script src ="https://code.jquery.com/jquery-latest.min.js"></script>
-	<script src ="/socket.io/socket.io.js"></script>
-	
-	<script>
-	
-	jQuery(function($){
-	
-		var socket = io.connect();
-		
-		var $messageForm = $('#send-message');
-		var $messageBox = $('#message');
-		var $chat = $('#chat');
-		
-		$messageForm.submit(function(e){
-		
-            e.preventDefault();
-            socket.emit('send-message', $messageBox.val());
-            $messageBox.val('');
-		
-		});
-		
-		socket.on('new message', function(data){
-            $chat.append(data + "<br/>");
-		});
-	});
-	
-	</script>
-</body>
-</head>
-</html>
+</body></html>

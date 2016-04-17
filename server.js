@@ -24,21 +24,46 @@ var connection = mysql.createConnection({
 });
 
 io.sockets.on('connection', function(socket){
-    connection.query({sql:"SELECT * FROM messages WHERE `room_id`=1 ORDER BY `time_utc` LIMIT 10;"}, function(err, rows, fields){
-        if(err){
-            console.log("Couldn't get existing messages from database.");
-            console.log(err);
-            socket.emit(err);
-            return;
-        }
-        var output = "- system message - Welcome to Chat584!  Let's start you off with the most recent ten messages (or up to ten if fewer exist in our database).<br>- -";
-        for(item of rows) {
-            output += "<br>user " + item["user_id"] + ": " + item["msg_body"];
-        }
-        socket.emit('new message', output);
+    socket.on('room-change', function(data) {
+        console.log("A user attempted to change room to '" + data + "'");
+        connection.query({sql:"SELECT `room_id` FROM rooms WHERE `name`=\"" + data + "\";"}, function(err, rows, fields){
+            if(err) {
+                var errMsg = "ERROR attempting to get room info from DB. " + err;
+                console.log(errMsg);
+                socket.emit('new message', errMsg);
+                return;
+            }
+            else if(rows.length == 0) {
+                socket.emit('new message', "No such room exists: " + data);
+                return;
+            }
+            else {
+                connection.query({sql:"SELECT * FROM messages WHERE `room_id`=" + rows[0]["room_id"] + " ORDER BY `time_utc` DESC LIMIT 10;"}, function(err, rows, fields){
+                    if(err){
+                        console.log("Couldn't get existing messages from database.");
+                        console.log(err);
+                        socket.emit(err);
+                        return;
+                    }
+                    socket.emit('clear-chat');
+                    socket.emit('update-roomname', data);
+                    var output = ""
+                    for(item of rows) {
+                        output = "user " + item["user_id"] + ": " + item["msg_body"] + "<br>" + output;
+                    }
+                    output = "- system message - Welcome to " + data + "!  Let's start you off with the most recent ten messages (or up to ten if fewer exist in our database).<br>- -<br>" + output;
+                    if(rows.length == 0) {
+                        output += "- system message - No messages in this room, yet.  Be the first!<br>- -";
+                    }
+
+                    socket.emit('new message', output);
+                });
+            }
+        });
     });
     
 	socket.on('send-message', function(data){
+        console.log("A user tried to send a message.");
         connection.query({sql:"INSERT INTO messages SET `room_id`=1, `time_utc`=UNIX_TIMESTAMP(), `user_id`=1, `msg_body`=\"" + data + "\";"}, function(err, rows, fields){
             if(err){
                 console.log("Couldn't insert incoming message to DB; will not emit.");
@@ -49,6 +74,4 @@ io.sockets.on('connection', function(socket){
 		    io.sockets.emit('new message', data);
         });
     });
-	
-	
 });
