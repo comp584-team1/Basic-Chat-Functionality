@@ -31,7 +31,7 @@
 	
         <script>
 
-            jQuery(function($){
+            //jQuery(function($){
 
                 var socket = io.connect();
 
@@ -53,17 +53,31 @@
                     var h = chat[0].scrollHeight;
                     chat.scrollTop(h);
                 });
-            });
+            //});
 
         </script>
         
         <script type="text/javascript">
+            var currentRoom = "";
+            
+            function init() {
+                console.log("Initializing DOM-dependent JS.");
+                $("#set-room").click(setRoom);
+            }
+            
+            function setRoom() {
+                var roomName = $("#room").val();
+                console.log("Attempting to change room to '" + roomName + "'")
+                socket.emit("room-change", roomName);
+            }
+            
+            $(document).ready(init);
         </script>
     </head>
 <body>
     <h1 id="header">Welcome to Chat584!</h1>
     <div id="chat-elements">
-        <div id = "chat"></div><br>
+        <div id = "chat">Welcome to Chat584!  Select a room to join.<br></div><br>
         <form id = "send-message">
             <input size = "35" id = "message"><br>
             <input type = "submit">
@@ -73,7 +87,7 @@
     <div id="details">
         Username: <input id="user" size="16"><br>
         Room: <input id="room" size="16"><br>
-        <button id="set-room">Set room</button>
+        <button id="set-room">Join room</button>
     </div>
 
 </body></html>
