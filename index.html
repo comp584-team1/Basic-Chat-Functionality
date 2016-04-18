@@ -13,14 +13,14 @@
             float: right;
         }
 
-        #chat{
+        #chatPane{
             height: 300px;
             width: 400px;
             border: groove;
             overflow-y: scroll;
         }
 
-        #send-message{
+        #textBoxMessage{
             padding: 10px 10px 0px .4em;
         }
 
@@ -33,46 +33,46 @@
             var currentRoom = "";
             var socket;
             
-            var chatSend;
-            var messageBox;
-            var chat;
+            var buttonChatSend;
+            var textBoxMessage;
+            var chatPane;
             var header;
-            var setRoomButton;
+            var buttonSetRoom;
             
             function init() {
                 console.log("Initializing DOM-dependent JS.");
                 
                 socket = io.connect();
 
-                chatSend = $('#chatSend');
-                messageBox = $('#message');
-                chat = $('#chat');
+                buttonChatSend = $('#buttonChatSend');
+                textBoxMessage = $('#textBoxMessage');
+                chatPane = $('#chatPane');
                 header = $("#header");
-                setRoomButton = $("#setRoom");
+                buttonSetRoom = $("#buttonSetRoom");
                 
-                setRoomButton.click(setRoom);
-                chatSend.click(function(e){
+                buttonSetRoom.click(setRoom);
+                buttonChatSend.click(function(e){
 
                     e.preventDefault();
                     console.log("User attempting to send a message.");
-                    socket.emit('send-message', messageBox.val());
-                    messageBox.val('');
+                    socket.emit('send-message', textBoxMessage.val());
+                    textBoxMessage.val('');
 
                 });
                 
-                messageBox.keyup(function(event){
+                textBoxMessage.keyup(function(event){
                     if(event.keyCode == 13){
-                        chatSend.click();
+                        buttonChatSend.click();
                     }
                 });
-                $("#room").keyup(function(event){
+                $("#textBoxJoinRoom").keyup(function(event){
                     if(event.keyCode == 13){
-                        setRoomButton.click();
+                        buttonSetRoom.click();
                     }
                 });
 
                 socket.on('new message', function(data){
-                    var chatOut = $("#chat");
+                    var chatOut = $("#chatPane");
                     chatOut.append(data + "<br/>");
                     var h = chatOut[0].scrollHeight;
                     chatOut.scrollTop(h);
@@ -80,7 +80,7 @@
 
                 socket.on('clear-chat', function(){
                     console.log("Server tried to clear local chat window.");
-                    chat.html("");
+                    chatPane.html("");
                 });
 
                 socket.on('update-roomname', function(data) {
@@ -89,7 +89,7 @@
             }
             
             function setRoom() {
-                var roomName = $("#room").val();
+                var roomName = $("#textBoxJoinRoom").val();
                 console.log("Attempting to change room to '" + roomName + "'")
                 socket.emit("room-change", roomName);
             }
@@ -100,15 +100,15 @@
 <body>
     <h1 id="header">Welcome to Chat584!</h1>
     <div id="chat-elements">
-        <div id="chat">Welcome to Chat584!  Select a room to join.<br></div><br>
-        <input size="35" id="message"><br>
-        <button id="chatSend">Send</button>
+        <div id="chatPane">Welcome to Chat584!  Select a room to join.<br></div><br>
+        <input size="35" id="textBoxMessage"><br>
+        <button id="buttonChatSend">Send</button>
     </div>
 
     <div id="details">
-        Username: <input id="user" size="16"><br>
-        Room: <input id="room" size="16"><br>
-        <button id="setRoom">Join room</button>
+        Username: <input id="textBoxChatUser" size="16"><br>
+        Room: <input id="textBoxJoinRoom" size="16"><br>
+        <button id="buttonSetRoom">Join room</button>
     </div>
 
 </body></html>

@@ -64,6 +64,10 @@ io.sockets.on('connection', function(socket){
     
 	socket.on('send-message', function(data){
         console.log("A user tried to send a message.");
+        if(/^\s*$/.test(data)){
+            console.log("User tried to post a black message; rejected.");
+            return;
+        }
         connection.query({sql:"INSERT INTO messages SET `room_id`=1, `time_utc`=UNIX_TIMESTAMP(), `user_id`=1, `msg_body`=\"" + data + "\";"}, function(err, rows, fields){
             if(err){
                 console.log("Couldn't insert incoming message to DB; will not emit.");
