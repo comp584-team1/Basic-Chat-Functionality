@@ -19,7 +19,7 @@ app.get('/', function(req, res){
 var connection = mysql.createConnection({
     host:'127.0.0.1',
     user:'root',
-    password:'secretpass',
+    password:'',
     database:'chatdb'
 });
 
@@ -34,8 +34,11 @@ io.sockets.on('connection', function(socket){
                 return;
             }
             else if(rows.length == 0) {
-                socket.emit('new message', "No such room exists: " + data);
-                return;
+                socket.emit('new message', "No such room exists: " + data + ". Creating room");
+				connection.query({sql:"INSERT INTO rooms (name) VALUES(" + data + ");"}, function(err, row, fields){
+				if (err) console.log("Error");
+				});
+				return;
             }
             else {
                 connection.query({sql:"SELECT * FROM messages WHERE `room_id`=" + rows[0]["room_id"] + " ORDER BY `time_utc` DESC LIMIT 10;"}, function(err, rows, fields){
@@ -43,7 +46,7 @@ io.sockets.on('connection', function(socket){
                         console.log("Couldn't get existing messages from database.");
                         console.log(err);
                         socket.emit(err);
-                        return;
+						return;
                     }
                     socket.emit('clear-chat');
                     socket.emit('update-roomname', data);
