@@ -34,6 +34,8 @@
             var socket;
             
             var buttonChatSend;
+            var textBoxChatUser;
+            var textBoxJoinRoom;
             var textBoxMessage;
             var chatPane;
             var header;
@@ -45,6 +47,8 @@
                 socket = io.connect();
 
                 buttonChatSend = $('#buttonChatSend');
+                textBoxChatUser = $('#textBoxChatUser');
+                textBoxJoinRoom = $('#textBoxJoinRoom');
                 textBoxMessage = $('#textBoxMessage');
                 chatPane = $('#chatPane');
                 header = $("#header");
@@ -55,7 +59,12 @@
 
                     e.preventDefault();
                     console.log("User attempting to send a message.");
-                    socket.emit('send-message', textBoxMessage.val());
+                    var data = {};
+                    data['user'] = textBoxChatUser.val();
+                    data['room'] = textBoxJoinRoom.val();
+                    data['msg'] = textBoxMessage.val();
+                    //socket.emit('send-message', textBoxMessage.val());
+                    socket.emit('send-message', data);
                     textBoxMessage.val('');
 
                 });
@@ -73,7 +82,7 @@
 
                 socket.on('new message', function(data){
                     var chatOut = $("#chatPane");
-                    chatOut.append(data + "<br/>");
+                    chatOut.append(data + "<br>");
                     var h = chatOut[0].scrollHeight;
                     chatOut.scrollTop(h);
                 });
@@ -84,14 +93,21 @@
                 });
 
                 socket.on('update-roomname', function(data) {
-                    header.html("Welcome to " + data + "!");
+                    header.html("Welcome to " + data['room'] + ", " + data['user'] + "!");
+                });
+                
+                $(window).on('beforeunload', function(){
+                    socket.close();
                 });
             }
             
             function setRoom() {
                 var roomName = $("#textBoxJoinRoom").val();
                 console.log("Attempting to change room to '" + roomName + "'")
-                socket.emit("room-change", roomName);
+                var data = {};
+                data['user'] = textBoxChatUser.val();
+                data['room'] = textBoxJoinRoom.val();
+                socket.emit("room-change", data);
             }
             
             $(document).ready(init);
@@ -108,7 +124,7 @@
     <div id="details">
         Username: <input id="textBoxChatUser" size="16"><br>
         Room: <input id="textBoxJoinRoom" size="16"><br>
-        <button id="buttonSetRoom">Join room</button>
+        <button id="buttonSetRoom">Join room as user</button>
     </div>
 
 </body></html>
