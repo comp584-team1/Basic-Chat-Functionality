@@ -4,8 +4,9 @@ var server = require('http').createServer(app);
 var io = require('socket.io').listen(server);
 var mysql = require('mysql');
 	
-	users = [];
-	connections = [];
+var room = 'room';
+users = [];
+connections = [];
 	
 server.listen(3000);
 console.log('Server running...');
@@ -24,6 +25,7 @@ var connection = mysql.createConnection({
 });
 
 io.sockets.on('connection', function(socket){
+    socket.join(room);
     socket['joined'] = false;
     socket.on('room-change', function(data) {
         //
@@ -144,6 +146,8 @@ io.sockets.on('connection', function(socket){
             return;
         }
         
+        data['room'] = socket['room'];
+        
         if(!data.hasOwnProperty('msg')){
             console.log("Got data with no message property; rejected.");
             socket.emit('new message', "Message data was missing!");
@@ -262,7 +266,16 @@ function handleMessage(user_id, room_id, data){
             return;
         }
         console.log("Insert completed on incoming message.")
-        io.sockets.emit('new message', "<strong>" + data['user'] + "</strong>: " + data['msg']);
+        for(var socketId in io.nsps['/'].adapter.rooms['room'].sockets) {
+            var individual = io.sockets.connected[socketId];
+            if(individual['room'] == data['room']){
+                individual.emit('new message', "<strong>" + data['user'] + "</strong>: " + data['msg']);
+            }
+            else {
+                console.log("couldn't emit to " + individual);
+            }
+        }
+        //io.sockets.emit('new message', "<strong>" + data['user'] + "</strong>: " + data['msg']);
     });    
 }
 
